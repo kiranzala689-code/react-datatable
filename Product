@@ -1,0 +1,217 @@
+import React, { useState, useEffect } from "react";
+
+export default function ProductPage() {
+
+  const [product, setProduct] = useState({
+    name: "",
+    price: "",
+    image: "",
+    category: ""
+  });
+
+  const [products, setProducts] = useState([]);
+  const [editIndex, setEditIndex] = useState(null);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("");
+
+  useEffect(() => {
+    const oldData = JSON.parse(localStorage.getItem("products")) || [];
+    setProducts(oldData);
+  }, []);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setProduct({
+      ...product,
+      [name]: value
+    });
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    let updated;
+
+    if (editIndex !== null) {
+      updated = [...products];
+      updated[editIndex] = product;
+      setEditIndex(null);
+    } else {
+      updated = [...products, product];
+    }
+
+    setProducts(updated);
+    localStorage.setItem("products", JSON.stringify(updated));
+
+    setProduct({
+      name: "",
+      price: "",
+      image: "",
+      category: ""
+    });
+  }
+
+  function Delete(i) {
+    let data = products.filter((_, index) => index !== i);
+    setProducts(data);
+    localStorage.setItem("products", JSON.stringify(data));
+  }
+
+  function Edit(i) {
+    setProduct(products[i]);
+    setEditIndex(i);
+  }
+
+  return (
+    <div className="container py-5">
+
+      <div className="row justify-content-center">
+        <div className="col-lg-6 col-md-8">
+          <div className="card shadow-lg border-0 rounded-4">
+            <div className="card-body">
+              <h3 className="text-center mb-4 fw-bold text-primary">
+                Add Product
+              </h3>
+
+              <form onSubmit={handleSubmit}>
+
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Product Name"
+                  className="form-control mb-3 rounded-3"
+                  value={product.name}
+                  onChange={handleChange}
+                  required
+                />
+
+                <input
+                  type="number"
+                  name="price"
+                  placeholder="Price"
+                  className="form-control mb-3 rounded-3"
+                  value={product.price}
+                  onChange={handleChange}
+                  required
+                />
+
+                <input
+                  type="text"
+                  name="image"
+                  placeholder="Image URL"
+                  className="form-control mb-3 rounded-3"
+                  value={product.image}
+                  onChange={handleChange}
+                  required
+                />
+
+                <input
+                  type="text"
+                  name="category"
+                  placeholder="Category"
+                  className="form-control mb-3 rounded-3"
+                  value={product.category}
+                  onChange={handleChange}
+                />
+
+                <button className="btn btn-primary w-100 rounded-3 fw-semibold">
+                  {editIndex !== null ? "Update Product" : "Save Product"}
+                </button>
+
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mt-5">
+  <div className="card shadow-sm border-0 rounded p-3">
+
+    <div className="row g-3 align-items-center">
+
+      <div className="col-lg-10 col-md-7 col-12">
+        <input
+          type="text"
+          placeholder=" Search product"
+          className="form-control rounded-pill px-4 py-2"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="col-lg-2 col-md-5 col-12">
+        <select
+          className="form-select rounded"
+          onChange={(e) => setSort(e.target.value)}
+        >
+          <option value="">Sort By</option>
+          <option value="low">Price: Low → High</option>
+          <option value="high">Price: High → Low</option>
+        </select>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+      <div className="row mt-4">
+
+        {products
+          .filter(item =>
+            item.name.toLowerCase().includes(search.toLowerCase())
+          )
+          .sort((a, b) => {
+            if (sort === "low") return a.price - b.price;
+            if (sort === "high") return b.price - a.price;
+            return 0;
+          })
+          .map((item, i) => (
+
+            <div className="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4" key={i}>
+              <div className="card h-100 shadow-sm border-0 rounded-4">
+
+                <img
+                  src={item.image}
+                  alt=""
+                  className="card-img-top p-3"
+                  style={{ height: "180px", objectFit: "contain" }}
+                />
+
+                <div className="card-body text-center">
+
+                  <h5 className="fw-bold text-dark">{item.name}</h5>
+                  <p className="text-success fw-semibold mb-1">
+                    ₹ {item.price}
+                  </p>
+                  <p className="text-muted small">
+                    {item.category}
+                  </p>
+
+                  <div className="d-flex justify-content-center gap-2 mt-3">
+                    <button
+                      className="btn btn-danger btn-sm px-3 rounded-pill"
+                      onClick={() => Delete(i)}
+                    >
+                      Delete
+                    </button>
+
+                    <button
+                      className="btn btn-success btn-sm px-3 rounded-pill"
+                      onClick={() => Edit(i)}
+                    >
+                      Edit
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          ))}
+
+      </div>
+
+    </div>
+  );
+}
